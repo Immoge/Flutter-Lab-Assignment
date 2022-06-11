@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.cyan,
         textTheme: GoogleFonts.poppinsTextTheme(
           Theme.of(context)
-              .textTheme, 
+              .textTheme, // If this is not set, then ThemeData.light().textTheme is used.
         ),
       ),
       home: const MySplashScreen(title: 'My Tutor'),
@@ -39,9 +39,9 @@ class _MySplashScreenState extends State<MySplashScreen> {
   void initState() {
     super.initState();
     Timer(
-        const Duration(seconds: 3),
-        () => Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (content) => LoginPage())));
+        const Duration(seconds: 5),
+        () => Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (content) => LoginPage())));
   }
 
   @override
