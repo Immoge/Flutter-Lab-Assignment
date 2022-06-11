@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.cyan,
         textTheme: GoogleFonts.poppinsTextTheme(
           Theme.of(context)
-              .textTheme, // If this is not set, then ThemeData.light().textTheme is used.
+              .textTheme, 
         ),
       ),
       home: const MySplashScreen(title: 'My Tutor'),
