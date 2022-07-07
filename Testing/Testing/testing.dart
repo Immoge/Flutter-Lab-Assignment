@@ -1,16 +1,21 @@
 import 'dart:convert';
 import '../models/subjects.dart';
+import '../models/user.dart';
+import '../models/cart.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-import 'package:lab_assignment_2/constants.dart';
+
 import 'package:ndialog/ndialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'models/subjects.dart';
+import 'package:lab_assignment_2/cartScreen.dart';
+import 'package:lab_assignment_2/constants.dart';
 
 class subjectsList extends StatefulWidget {
-  const subjectsList({Key? key}) : super(key: key);
+  final User user;
+  const subjectsList({Key? key, required this.user}) : super(key: key);
 
   @override
   State<subjectsList> createState() => _subjectsListState();
@@ -25,6 +30,7 @@ class _subjectsListState extends State<subjectsList> {
   String search = "";
   String titlecenter = "Loading...";
   late double screenHeight, screenWidth, resWidth;
+  int cart = 0;
 
   @override
   void initState() {
@@ -49,10 +55,28 @@ class _subjectsListState extends State<subjectsList> {
         title: const Text('Subjects'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
             onPressed: () {
               _loadSearchDialog();
             },
+            icon: const Icon(Icons.search),
+          ),
+          TextButton.icon(
+            onPressed: () async {
+              await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (content) => cartScreen(
+                            user: widget.user,
+                          )));
+              loadSubjects(1, search);
+              _loadMyCart();
+            },
+            icon: const Icon(
+              Icons.shopping_cart,
+              color: Colors.white,
+            ),
+            label: Text(widget.user.cart.toString(),
+                style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -78,82 +102,94 @@ class _subjectsListState extends State<subjectsList> {
                           splashColor: Colors.amber,
                           onTap: () => {loadSubjectDetails(index)},
                           child: Card(
-                              shadowColor: Color.fromARGB(255, 212, 130, 193),
-                              elevation: 10,
-                              color: Color.fromARGB(255, 225, 76, 53),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                children: [
-                                  Flexible(
-                                    flex: 5,
-                                    fit: FlexFit.loose,
-                                    child: CachedNetworkImage(
-                                      imageUrl: CONSTANTS.server +
-                                          "/my_tutor/assets/courses/" +
-                                          subjectList[index]
-                                              .subject_id
-                                              .toString() +
-                                          '.jpg',
-                                      height: screenHeight,
-                                      width: resWidth,
-                                      placeholder: (context, url) =>
-                                          const CircularProgressIndicator(),
-                                      errorWidget: (context, url, error) =>
-                                          const Icon(Icons.error),
-                                    ),
+                            shadowColor: Color.fromARGB(255, 212, 130, 193),
+                            elevation: 10,
+                            color: Color.fromARGB(255, 225, 76, 53),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              children: [
+                                Flexible(
+                                  flex: 5,
+                                  fit: FlexFit.loose,
+                                  child: CachedNetworkImage(
+                                    imageUrl: CONSTANTS.server +
+                                        "/my_tutor/assets/courses/" +
+                                        subjectList[index]
+                                            .subject_id
+                                            .toString() +
+                                        '.png',
+                                    height: screenHeight,
+                                    width: resWidth,
+                                    placeholder: (context, url) =>
+                                        const CircularProgressIndicator(),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(Icons.error),
                                   ),
-                                  Flexible(
-                                      flex: 5,
-                                      child: Column(
-                                        children: [
-                                          Text(
+                                ),
+                                Flexible(
+                                  flex: 5,
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        subjectList[index]
+                                            .subject_name
+                                            .toString(),
+                                        style: const TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        subjectList[index]
+                                            .subject_description
+                                            .toString(),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      Text(
+                                        "\n RM " +
+                                            double.parse(subjectList[index]
+                                                    .subject_price
+                                                    .toString())
+                                                .toStringAsFixed(2),
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      Text(
+                                        subjectList[index]
+                                                .subject_sessions
+                                                .toString() +
+                                            " sessions",
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      Text(
+                                        "Rating: " +
                                             subjectList[index]
-                                                .subject_name
+                                                .subject_rating
                                                 .toString(),
-                                            style: const TextStyle(
-                                                fontSize: 16,
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          Text(
-                                            subjectList[index]
-                                                .subject_description
-                                                .toString(),
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
-                                          Text(
-                                            "\n RM " +
-                                                double.parse(subjectList[index]
-                                                        .subject_price
-                                                        .toString())
-                                                    .toStringAsFixed(2),
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
-                                          Text(
-                                            subjectList[index]
-                                                    .subject_sessions
-                                                    .toString() +
-                                                " sessions",
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
-                                          Text(
-                                            "Rating: " +
-                                                subjectList[index]
-                                                    .subject_rating
-                                                    .toString(),
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
-                                        ],
-                                      ))
-                                ],
-                              )),
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                    flex: 3,
+                                    child: IconButton(
+                                        onPressed: () {
+                                          _addtocartDialog(index);
+                                        },
+                                        icon: const Icon(
+                                          Icons.add_shopping_cart,
+                                          color: Colors.white,
+                                        ))),
+                              ],
+                            ),
+                          ),
                         );
                       }))),
               SizedBox(
@@ -256,6 +292,13 @@ class _subjectsListState extends State<subjectsList> {
               ],
             )),
             actions: [
+              SizedBox(
+                  width: screenWidth / 1,
+                  child: ElevatedButton(
+                      onPressed: () {
+                        _addtocartDialog(index);
+                      },
+                      child: const Text("Add to cart"))),
               TextButton(
                 child: const Text(
                   "Close",
@@ -307,5 +350,88 @@ class _subjectsListState extends State<subjectsList> {
             );
           });
         });
+  }
+
+  void _loadMyCart() {
+    http
+        .post(Uri.parse(CONSTANTS.server + "/my_tutor/php/load_mycartqty.php"))
+        .timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        return http.Response(
+            'Error', 408); // Request Timeout response status code
+      },
+    ).then((response) {
+      print(response.body);
+      var jsondata = jsonDecode(response.body);
+      if (response.statusCode == 200 && jsondata['status'] == 'success') {
+        print(jsondata['data']['carttotal'].toString());
+        setState(() {});
+      }
+    });
+  }
+
+  void _addtocartDialog(int index) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(20.0))),
+            title: const Text(
+              "Add to cart",
+            ),
+            content: const Text(
+                "Are you sure you want to add the subject to your cart?"),
+            actions: <Widget>[
+              TextButton(
+                child: const Text(
+                  "Yes",
+                ),
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  _addtoCart(index);
+                },
+              ),
+              TextButton(
+                child: const Text(
+                  "No",
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  void _addtoCart(int index) {
+    http.post(Uri.parse(CONSTANTS.server + "/my_tutor/php/insert_cart.php"),
+        body: {
+          "email": widget.user.email.toString(),
+          "subject_id": subjectList[index].subject_id.toString(),
+        }).timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        return http.Response(
+            'Error', 408); // Request Timeout response status code
+      },
+    ).then((response) {
+      print(response.body);
+      var jsondata = jsonDecode(response.body);
+      if (response.statusCode == 200 && jsondata['status'] == 'success') {
+        print(jsondata['data']['carttotal'].toString());
+        setState(() {
+          widget.user.cart = jsondata['data']['carttotal'].toString();
+        });
+        Fluttertoast.showToast(
+            msg: "Success",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            fontSize: 16.0);
+      }
+    });
   }
 }
